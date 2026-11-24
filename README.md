@@ -39,7 +39,7 @@
 ### 2. データベース（Neon）をつなぐ
 
 1. Vercel のプロジェクト画面 →「Storage」→「Create Database」→「Neon」を選びます。
-2. リージョンは `Tokyo (ap-northeast-1)` を選び、プランは Free のままで作成します。
+2. リージョンは `Sydney` を選び（Tokyo は選べないため）、プランは Free のままで作成します。アプリの実行リージョンも `vercel.json` で Sydney（syd1）に合わせてあります。
 3. プロジェクトに接続すると、環境変数 `DATABASE_URL` と `DATABASE_URL_UNPOOLED` が自動で入ります。
 
 テーブルはデプロイ（ビルド）のたびに自動で作成・更新されます。
