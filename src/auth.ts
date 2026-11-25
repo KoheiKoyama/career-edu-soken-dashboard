@@ -20,14 +20,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user }) {
       const email = user.email?.toLowerCase();
-      if (!email) return false;
-      const [row] = await db.select().from(users).where(eq(users.email, email));
-      if (row) return row.active;
-      if (bootstrapEmails().includes(email)) {
-        await db.insert(users).values({ email, name: user.name ?? email, role: "編集" });
-        return true;
+      if (!email) {
+        console.warn("[signIn] Googleアカウントのメールが取得できませんでした");
+        return false;
       }
-      return false;
+      try {
+        const [row] = await db.select().from(users).where(eq(users.email, email));
+        if (row) {
+          if (!row.active) console.warn(`[signIn] 無効化されたユーザー: ${email}`);
+          return row.active;
+        }
+        if (bootstrapEmails().includes(email)) {
+          await db.insert(users).values({ email, name: user.name ?? email, role: "編集" });
+          console.log(`[signIn] ADMIN_EMAILS から自動登録: ${email}`);
+          return true;
+        }
+        const dbHost = (() => {
+          try {
+            return new URL(process.env.DATABASE_URL ?? "").host;
+          } catch {
+            return "（DATABASE_URL 未設定）";
+          }
+        })();
+        console.warn(
+          `[signIn] 未登録のためログイン拒否: ${email} / ADMIN_EMAILS 設定数: ${bootstrapEmails().length} / 接続先DB: ${dbHost}`,
+        );
+        return false;
+      } catch (e) {
+        console.error("[signIn] データベースの確認中にエラー", e);
+        return false;
+      }
     },
   },
 });
